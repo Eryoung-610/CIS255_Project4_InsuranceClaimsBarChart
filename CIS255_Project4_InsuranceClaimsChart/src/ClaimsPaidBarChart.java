@@ -1,6 +1,9 @@
 import javafx.application.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -16,13 +19,12 @@ import javafx.scene.chart.XYChart.Series;
 import javafx.scene.chart.XYChart.Data;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+
+import java.nio.Buffer;
 import java.util.*;
 import java.io.*;
 import javafx.scene.text.Text;
 import javafx.scene.Group;
-
-import java.util.*;
-import java.io.*;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class ClaimsPaidBarChart extends Application {
@@ -34,9 +36,9 @@ public class ClaimsPaidBarChart extends Application {
 	private static final int TICK_INTERVAL = 1000; // used to customize the visual display
 
 	/* PROJECT: Test with all three valid file names and one invalid file name. */
-	private final String fileName = "Disability_Insurance_2016.csv";
-	// private final String fileName = "Disability_Insurance_2017.csv";
-	// private final String fileName = "Disability_Insurance_2018.csv";
+//    private final String fileName = "Disability_Insurance_2016.csv";
+//     private final String fileName = "Disability_Insurance_2017.csv";
+	private final String fileName = "Disability_Insurance_2018.csv";
 //	 private final String fileName = "Disability_Insurance_BadFileName.csv";
 
 	// use this file ONLY if completing the extra credit
@@ -67,6 +69,7 @@ public class ClaimsPaidBarChart extends Application {
 		 * yAxisMax, and dataLabel variables. This code now updates the display using
 		 * those values.
 		 */
+		
 		int yAxisDisplayMin = getVisuallyAppealingAxisValue(yAxisMin);
 		int yAxisDisplayMax = getVisuallyAppealingAxisValue(yAxisMax);
 		yAxis.setLowerBound(yAxisDisplayMin - TICK_INTERVAL);
@@ -78,7 +81,9 @@ public class ClaimsPaidBarChart extends Application {
 		barChart.getData().add(claimsPaidByMonth);
 		Scene scene = new Scene(barChart, 800, 600);
 		stage.setScene(scene);
-		stage.show();
+		if (success) {
+			stage.show();
+		}
 	}
 
 	/*
@@ -87,6 +92,7 @@ public class ClaimsPaidBarChart extends Application {
 	 */
 	private boolean fillData(Series series) {
 		/* PROJECT: YOUR CODE GOES HERE! */
+		ArrayList<Integer> list = new ArrayList<Integer>();
 		String filePath = "C:\\Users\\Young\\Desktop\\School\\CIS255\\ProjectClasses\\Project4_InsuranceClaimsBarChart\\";
 		String finalFilePath = filePath + fileName;
 		boolean found = true;
@@ -119,6 +125,7 @@ public class ClaimsPaidBarChart extends Application {
 			BufferedReader read = new BufferedReader(new FileReader(finalFilePath));
 			String line = read.readLine();
 			dataLabel = line;
+			read.close();
 		} catch (FileNotFoundException ex) {
 			found = false;
 			Alert alert = new Alert(AlertType.ERROR,
@@ -144,22 +151,25 @@ public class ClaimsPaidBarChart extends Application {
 				Scanner lineScan = new Scanner(oneLine);
 				lineScan.useDelimiter(",");
 
-
 				String month = lineScan.next();
 				monthValue = Integer.parseInt(lineScan.next());
 
-				System.out.println("MONTH : " + month);
-				System.out.println("VALUE : " + monthValue);
+				list.add(monthValue);
 
 				Data data = new Data(month, monthValue);
 				data.setMonthLabel(month);
 				data.setMonthValue(monthValue);
 
-				//Statement below leads to ClassCastException.
-				//series.getData().add(new Data(month, monthValue));
+				try {
+					series.getData().add(new XYChart.Data(month, monthValue));
+				} catch (ClassCastException ex) {
+					System.out.println("Invalid Class Cast");
+				}
 
 			}
 
+			yAxisMin = minY(list);
+			yAxisMax = maxY(list);
 			fileScan.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -167,10 +177,8 @@ public class ClaimsPaidBarChart extends Application {
 
 		// calculate the min and max values seen and update yAxisMin and yAxisMax based
 		// on these values
-		// use exception handling to account for a bad file. if a file is invalid,
-		// display an alert
 
-		return true; // this line here only so the code compiles; remove and updated as appropriate!
+		return found; // this line here only so the code compiles; remove and updated as appropriate!
 	}
 
 	private int getVisuallyAppealingAxisValue(int value) {
@@ -179,5 +187,17 @@ public class ClaimsPaidBarChart extends Application {
 
 	public static void main(String[] args) {
 		launch(args);
+	}
+
+	// calculate the min and max values seen and update yAxisMin and yAxisMax based
+	// on these values
+	public int maxY(ArrayList<Integer> list) {
+		int maxYAxis = Collections.max(list);
+		return maxYAxis;
+	}
+	
+	public int minY(ArrayList<Integer>list) {
+		int minYAxis = Collections.min(list);
+		return minYAxis;
 	}
 }
