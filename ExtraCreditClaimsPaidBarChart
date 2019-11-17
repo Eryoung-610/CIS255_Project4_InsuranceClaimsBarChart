@@ -31,7 +31,7 @@ public class ExtraCreditClaimsPaidBarChart extends Application {
 
 	/* PROJECT: You will set these values based on the data file. */
 	private int yAxisMin, yAxisMax; // the min and max of claims paid
-	private String dataLabel; // the year of the data
+	private String dataLabel1, dataLabel2, dataLabel3; // the year of the data
 
 	private static final int TICK_INTERVAL = 1000; // used to customize the visual display
 
@@ -42,9 +42,9 @@ public class ExtraCreditClaimsPaidBarChart extends Application {
 //	 private final String fileName = "Disability_Insurance_BadFileName.csv";
 
 	// use this file ONLY if completing the extra credit
-	 private final String fileName =
-	 "Disability_Insurance_2016-2018_ExtraCredit.csv";
+	private final String fileName = "Disability_Insurance_2016-2018_ExtraCredit.csv";
 
+	@SuppressWarnings("unused")
 	@Override
 	public void start(Stage stage) {
 
@@ -64,21 +64,21 @@ public class ExtraCreditClaimsPaidBarChart extends Application {
 		Series claimsPaidByMonth = new Series();
 		Series claimsPaidByMonth2 = new Series();
 		Series claimsPaidByMonth3 = new Series();
-		boolean success = fillData(claimsPaidByMonth);
-		boolean success2 = fillData(claimsPaidByMonth2);
-		boolean success3 = fillData(claimsPaidByMonth3);
-		
+		boolean success = fillData(claimsPaidByMonth, claimsPaidByMonth2, claimsPaidByMonth3);
+
 		/*
 		 * PROJECT: Once the fillData method is done, you have set the yAxisMin,
 		 * yAxisMax, and dataLabel variables. This code now updates the display using
 		 * those values.
 		 */
-		
+
 		int yAxisDisplayMin = getVisuallyAppealingAxisValue(yAxisMin);
 		int yAxisDisplayMax = getVisuallyAppealingAxisValue(yAxisMax);
 		yAxis.setLowerBound(yAxisDisplayMin - TICK_INTERVAL);
 		yAxis.setUpperBound(yAxisDisplayMax + TICK_INTERVAL);
-		claimsPaidByMonth.setName(dataLabel);
+		claimsPaidByMonth.setName(dataLabel1);
+		claimsPaidByMonth2.setName(dataLabel2);
+		claimsPaidByMonth3.setName(dataLabel3);
 
 		// adds the data series to the chart, creates a scene, sets the stage, and
 		// shows!
@@ -87,26 +87,26 @@ public class ExtraCreditClaimsPaidBarChart extends Application {
 		barChart.getData().add(claimsPaidByMonth3);
 		Scene scene = new Scene(barChart, 800, 600);
 		stage.setScene(scene);
-		if (success && success2 && success3) {
-			stage.show();
-		}
+		stage.show();
 	}
 
 	/*
 	 * PROJECT: Your code goes in this method. I've added comments below to remind
 	 * you of what this method needs to do.
 	 */
-	private boolean fillData(Series series) {
+	private boolean fillData(Series series, Series series2, Series series3) {
 		/* PROJECT: YOUR CODE GOES HERE! */
 		ArrayList<Integer> list = new ArrayList<Integer>();
 		String filePath = "C:\\Users\\Young\\Desktop\\School\\CIS255\\ProjectClasses\\Project4_InsuranceClaimsBarChart\\";
 		String finalFilePath = filePath + fileName;
 		boolean found = true;
-		String monthLabel = " ";
 		int monthValue = 0;
+		int monthValue2 = 0;
+		int monthValue3 = 0;
 
 		// create a Data object to add to the series for each month/value pair:
 		// series.getData().add(new Data(monthLabel, monthValue));
+		@SuppressWarnings("unused")
 		class Data {
 			private String monthLabel;
 			private int monthValue;
@@ -128,10 +128,13 @@ public class ExtraCreditClaimsPaidBarChart extends Application {
 		// read in the data file
 		// get the dataLabel (the year) from the first line of the file
 		try {
-			BufferedReader read = new BufferedReader(new FileReader(finalFilePath));
-			String line = read.readLine();
-			dataLabel = line;
-			read.close();
+			Scanner reader = new Scanner(new FileInputStream(finalFilePath));
+			String line = reader.next();
+			String[] TEST = line.split(",");
+			dataLabel1 = TEST[1];
+			dataLabel2 = TEST[2];
+			dataLabel3 = TEST[3];
+			reader.close();
 		} catch (FileNotFoundException ex) {
 			found = false;
 			Alert alert = new Alert(AlertType.ERROR,
@@ -159,30 +162,26 @@ public class ExtraCreditClaimsPaidBarChart extends Application {
 
 				String month = lineScan.next();
 				monthValue = Integer.parseInt(lineScan.next());
+				monthValue2 = Integer.parseInt(lineScan.next());
+				monthValue3 = Integer.parseInt(lineScan.next());
 
 				list.add(monthValue);
+				list.add(monthValue2);
+				list.add(monthValue3);
 
-				Data data = new Data(month, monthValue);
-				data.setMonthLabel(month);
-				data.setMonthValue(monthValue);
-
-				try {
-					series.getData().add(new XYChart.Data(month, monthValue));
-				} catch (ClassCastException ex) {
-					System.out.println("Invalid Class Cast");
-				}
-
+				series.getData().add(new XYChart.Data(month, monthValue));
+				series2.getData().add(new XYChart.Data(month, monthValue2));
+				series3.getData().add(new XYChart.Data(month, monthValue3));
+				lineScan.close();
 			}
 
 			yAxisMin = minY(list);
 			yAxisMax = maxY(list);
+
 			fileScan.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-
-		// calculate the min and max values seen and update yAxisMin and yAxisMax based
-		// on these values
 
 		return found; // this line here only so the code compiles; remove and updated as appropriate!
 	}
@@ -201,8 +200,8 @@ public class ExtraCreditClaimsPaidBarChart extends Application {
 		int maxYAxis = Collections.max(list);
 		return maxYAxis;
 	}
-	
-	public int minY(ArrayList<Integer>list) {
+
+	public int minY(ArrayList<Integer> list) {
 		int minYAxis = Collections.min(list);
 		return minYAxis;
 	}
